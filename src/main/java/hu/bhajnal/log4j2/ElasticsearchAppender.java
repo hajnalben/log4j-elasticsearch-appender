@@ -100,7 +100,12 @@ public class ElasticsearchAppender extends AbstractAppender {
 	 */
 	@Override
 	public void append(LogEvent logEvent) {
-		_eventQueue.offer(_prepareLogEvent(logEvent));
+		try {
+			_eventQueue.offer(_prepareLogEvent(logEvent));
+		}
+		catch (Throwable e) {
+			LOGGER.error("Failed to append logEvent", e);
+		}
 	}
 
 	/**
