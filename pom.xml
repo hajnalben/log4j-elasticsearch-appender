@@ -10,8 +10,6 @@
 	<description>A log4j2 appender implementation for elasticsearch 2.3.4</description>
 
 	<properties>
-		<maven.compiler.source>1.7</maven.compiler.source>
-		<maven.compiler.target>1.7</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 
@@ -19,10 +17,12 @@
 
 		<dependency>
 			<!-- Elasticsearch maven bundle needs the 18.0 version of this however it is deleted from the central. 
-				Adding this version fixes the error. -->
+				Adding this version fixes the error. 
+				Version 21+ is compiled with jdk8 so it cannot be used.
+			-->
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
-			<version>21.0</version>
+			<version>20.0</version>
 		</dependency>
 
 		<dependency>
@@ -30,7 +30,7 @@
 			<artifactId>elasticsearch</artifactId>
 			<version>2.3.4</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
@@ -59,6 +59,21 @@
 		</dependency>
 
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.6.1</version>
+				<configuration>
+					<!-- or whatever version you use -->
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 	<scm>
 		<url>https://github.com/hajnalben/log4j-elasticsearch-appender</url>
