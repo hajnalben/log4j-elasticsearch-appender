@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.logging.log4j.core.Filter;
@@ -70,7 +72,7 @@ public class ElasticsearchAppender extends AbstractAppender {
 		@PluginAttribute(value = "host", defaultString = "localhost") String host,
 		@PluginAttribute(value = "port", defaultInt = 9300) int port,
 		@PluginAttribute(value = "cluster", defaultString = "logstash") String cluster,
-		@PluginAttribute(value = "index", defaultString = "logstash") String index,
+		@PluginAttribute(value = "index", defaultString = "logstash_<yyyyMMdd>") String index,
 		@PluginAttribute(value = "type", defaultString = "log") String type,
 		@PluginAttribute(value = "buffer", defaultInt = 5000) int buffer,
 		@PluginAttribute(value = "bulk-size", defaultInt = 500) int bulkSize) {
@@ -212,8 +214,11 @@ public class ElasticsearchAppender extends AbstractAppender {
 	private void _processEvents(List<Map<String, Object>> events) {
 		BulkRequestBuilder bulkRequest = _client.prepareBulk();
 
+		String index = _config.getIndexName();
+
 		for (Map<String, Object> logEvent : events) {
-			IndexRequestBuilder indexRequest = _client.prepareIndex(_config.index, _config.type);
+			IndexRequestBuilder indexRequest = _client.prepareIndex(index, _config.type);
+
 			bulkRequest.add(indexRequest.setSource(logEvent));
 		}
 
@@ -247,6 +252,8 @@ public class ElasticsearchAppender extends AbstractAppender {
 	private static final SimpleDateFormat _ELASTIC_DATE_FORMAT = new SimpleDateFormat(
 		"yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
+	private static final Pattern _INDEX_NAME_PATTERN = Pattern.compile("(.*)(<(.+)>)(.*)");
+
 	private Client _client;
 
 	private Config _config;
@@ -272,6 +279,21 @@ public class ElasticsearchAppender extends AbstractAppender {
 		private String name;
 
 		private int port;
+
+		private String getIndexName() {
+			Matcher matcher = _INDEX_NAME_PATTERN.matcher(index);
+
+			if (matcher.matches()) {
+				String dateFormat = matcher.group(3);
+				SimpleDateFormat indexDateFormat = new SimpleDateFormat(dateFormat);
+
+				String date = indexDateFormat.format(new Date());
+
+				return matcher.group(1) + date + matcher.group(4);
+			}
+
+			return index;
+		}
 
 	}
 
